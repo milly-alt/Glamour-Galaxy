@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Glamour Galaxy</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+    
+    <!-- Estilos Personalizados -->
+    <style>
+        :root {
+            --primary-color: #ec4899; /* pink-500 */
+            --primary-hover-color: #db2777; /* pink-600 */
+            --background-color: #f9fafb; /* gray-50 (cinza bem claro) */
+            --card-color: #ffffff; /* white (branco) */
+            --text-color: #6b7280; /* gray-500 (cinza para texto) */
+            --text-strong-color: #111827; /* gray-900 (preto suave para títulos) */
+        }
+        html {
+            scroll-behavior: smooth;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+        .font-display {
+            font-family: 'Bebas Neue', sans-serif;
+        }
+        .header-gradient {
+            /* background-image: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0)); */
+        }
+        .product-card {
+            position: relative;
+            overflow: hidden;
+            border-radius: 0.5rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            aspect-ratio: 1 / 1;
+            border: 1px solid #e5e7eb;
+        }
+        .product-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 25px rgba(236, 72, 153, 0.5);
+        }
+        .product-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+        }
+        .product-card:hover img {
+            transform: scale(1.1);
+        }
+        .product-card-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.95) 20%, rgba(0, 0, 0, 0));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .product-card:hover .product-card-overlay {
+            opacity: 1;
+        }
+        .product-card-content {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 1rem;
+            transform: translateY(100%);
+            transition: transform 0.35s ease-out;
+            color: white;
+        }
+        .product-card:hover .product-card-content {
+            transform: translateY(0);
+        }
+        .btn-primary {
+            background-color: var(--primary-color);
+            transition: background-color 0.3s;
+        }
+        .btn-primary:hover {
+            background-color: var(--primary-hover-color);
+        }
+        .category-section-scroll {
+            display: flex;
+            gap: 1.5rem; /* 24px */
+            padding: 1rem 0;
+            overflow-x: auto;
+            scrollbar-width: none; /* Firefox */
+        }
+        .category-section-scroll::-webkit-scrollbar {
+            display: none; /* Chrome, Safari, Opera */
+        }
+        
+        .category-section-scroll .product-card {
+            width: 200px;
+            flex-shrink: 0;
+        }
+        @media (min-width: 640px) {
+            .category-section-scroll .product-card {
+                width: 240px;
+            }
+        }
+        @media (min-width: 1024px) {
+            .category-section-scroll .product-card {
+                width: 280px;
+            }
+        }
+
+        .carousel-btn { display: none; }
+        @media (min-width: 768px) { 
+            .carousel-btn { 
+                display: block; 
+                background-color: rgba(255, 255, 255, 0.5);
+                backdrop-filter: blur(4px);
+                color: #333;
+                border: 1px solid #eee;
+            }
+            .carousel-btn:hover {
+                background-color: rgba(255, 255, 255, 0.8);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fadeInUp { opacity: 0; animation: fadeInUp 0.8s ease-out forwards; }
+        
+        .text-gradient-pink {
+            background-image: linear-gradient(to right, #f9a8d4, #ec4899);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .hero-section { transition: box-shadow 0.3s ease, border-color 0.3s ease; }
+        .hero-section:hover { 
+            box-shadow: 0 0 30px rgba(236, 72, 153, 0.2); 
+            border-color: rgba(236, 72, 153, 0.3); 
+        }
+        
+        .modal-backdrop { transition: opacity 0.3s ease-in-out; }
+        .modal-content { transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out; transform: scale(0.95); opacity: 0; }
+        .modal-open .modal-content { transform: scale(1); opacity: 1; }
+        .cart-panel { transition: transform 0.3s ease-in-out; transform: translateX(100%); }
+        .cart-open .cart-panel { transform: translateX(0); }
+        
+        .modal-content-wrapper {
+            max-height: 90vh;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary-color) var(--card-color);
+        }
+        .modal-content-wrapper::-webkit-scrollbar { width: 8px; }
+        .modal-content-wrapper::-webkit-scrollbar-track { background: var(--card-color); }
+        .modal-content-wrapper::-webkit-scrollbar-thumb { background-color: var(--primary-color); border-radius: 4px; }
+    
+        /* Estilos para o rating (estrelas) */
+        .star-rating {
+            color: #f59e0b; /* amber-500 */
+        }
+
+        /* NOVO: Estilos para produtos relacionados no modal */
+        .related-product-card {
+            border: 1px solid #e5e7eb; /* gray-200 */
+            border-radius: 0.5rem;
+            overflow: hidden;
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+        }
+        .related-product-card:hover {
+            border-color: #ec4899; /* pink-500 */
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+        .related-product-card img {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Cabeçalho -->
+    <header class="bg-gray-50/90 backdrop-blur-sm sticky top-0 z-40 shadow-sm">
+        <!-- MUDANÇA: Removido 'flex-wrap md:flex-nowrap' e adicionado 'justify-between' -->
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+            <a href="#" class="text-3xl font-display tracking-wider text-zinc-900 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-pink-400"><path d="M12 3a6 6 0 0 0-6 6 6 6 0 0 0 6 6 6 6 0 0 0 6-6 6 6 0 0 0-6-6z"></path><path d="M12 19.5A6.5 6.5 0 0 0 5.5 13H5a7 7 0 0 0 7 7 7 7 0 0 0 7-7h-.5A6.5 6.5 0 0 0 12 19.5z"></path></svg>
+                Glamour Galaxy
+            </a>
+            <!-- MUDANÇA: Adicionado 'hidden md:flex' para esconder em mobile, removido 'w-full md:w-auto md:order-2 mt-4 md:mt-0' -->
+            <div class="hidden md:flex items-center space-x-4 border border-gray-300 rounded-full bg-white shadow-sm">
+                <!-- MUDANÇA: Adicionado 'w-64' para tamanho fixo em desktop, removido 'w-full' -->
+                <input id="search-input" type="text" placeholder="Buscar por produto ou marca..." class="bg-transparent text-zinc-900 px-4 py-2 rounded-full w-64 focus:outline-none placeholder-gray-500 focus:ring-2 focus:ring-pink-400">
+            </div>
+            <!-- MUDANÇA: Removido 'md:order-3' -->
+            <div class="flex items-center space-x-4">
+                <button id="cart-button" class="relative text-zinc-700 p-2 rounded-full hover:bg-zinc-200/60 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path><path d="M3 6h18"></path><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+                    <span id="cart-badge" class="absolute -top-1 -right-1 bg-pink-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
+                </button>
+                <div id="auth-container"></div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Conteúdo Principal -->
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        <section class="hero-section mb-12 p-8 md:p-12 rounded-lg bg-white border border-zinc-200 shadow-sm">
+             <h1 class="text-4xl sm:text-5xl md:text-6xl font-display text-gradient-pink tracking-wider animate-fadeInUp" style="animation-delay: 0.2s;">Realce Sua Beleza Única</h1>
+             <p class="mt-2 text-lg text-gray-600 max-w-2xl animate-fadeInUp" style="animation-delay: 0.5s;">Navegue pela nossa seleção de maquiagens e encontre seus novos favoritos.</p>
+        </section>
+        <div id="content-container"></div>
+    </main>
+    
+    <!-- Modal de Login -->
+    <div id="login-modal" class="fixed inset-0 bg-black bg-opacity-70 z-50 hidden items-center justify-center p-4 modal-backdrop">
+        <div class="modal-content-wrapper bg-white rounded-lg shadow-2xl w-full max-w-md modal-content border border-zinc-200 relative">
+            <div class="p-8">
+                <h2 class="text-2xl font-bold text-zinc-900 mb-6 text-center">Login</h2>
+                <form id="login-form">
+                    <div class="mb-4">
+                        <label for="login-email" class="block text-zinc-600 mb-2">Email</label>
+                        <input type="email" id="login-email" class="w-full bg-zinc-100 border border-zinc-300 rounded-lg px-4 py-2 text-zinc-900 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500" required>
+                    </div>
+                    <div class="mb-6">
+                        <label for="login-password" class="block text-zinc-600 mb-2">Senha</label>
+                        <input type="password" id="login-password" class="w-full bg-zinc-100 border border-zinc-300 rounded-lg px-4 py-2 text-zinc-900 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500" required>
+                    </div>
+                    <button type="submit" class="w-full btn-primary text-white font-bold py-2 px-4 rounded-lg">Entrar</button>
+                </form>
+                <p class="text-center mt-4">Não tem uma conta? <button id="show-register" class="text-pink-500 hover:underline font-semibold">Cadastre-se</button></p>
+            </div>
+            <button id="close-login-modal" class="absolute top-4 right-4 text-zinc-400 hover:text-zinc-800 text-2xl">&times;</button>
+        </div>
+    </div>
+    
+    <!-- Modal de Cadastro -->
+    <div id="register-modal" class="fixed inset-0 bg-black bg-opacity-70 z-50 hidden items-center justify-center p-4 modal-backdrop">
+        <div class="modal-content-wrapper bg-white rounded-lg shadow-2xl w-full max-w-md modal-content border border-zinc-200 relative">
+            <div class="p-8">
+                <h2 class="text-2xl font-bold text-zinc-900 mb-6 text-center">Criar Conta</h2>
+                <form id="register-form">
+                    <div class="mb-4">
+                        <label for="register-name" class="block text-zinc-600 mb-2">Nome</label>
+                        <input type="text" id="register-name" class="w-full bg-zinc-100 border border-zinc-300 rounded-lg px-4 py-2 text-zinc-900 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500" required>
+                    </div>
+                    <div class="mb-4">
+                        <label for="register-email" class="block text-zinc-600 mb-2">Email</label>
+                        <input type="email" id="register-email" class="w-full bg-zinc-100 border border-zinc-300 rounded-lg px-4 py-2 text-zinc-900 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500" required>
+                    </div>
+                    <div class="mb-6">
+                        <label for="register-password" class="block text-zinc-600 mb-2">Senha</label>
+                        <input type="password" id="register-password" class="w-full bg-zinc-100 border border-zinc-300 rounded-lg px-4 py-2 text-zinc-900 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500" required>
+                    </div>
+                    <button type="submit" class="w-full btn-primary text-white font-bold py-2 px-4 rounded-lg">Criar Conta</button>
+                </form>
+                <p class="text-center mt-4">Já tem uma conta? <button id="show-login" class="text-pink-500 hover:underline font-semibold">Faça Login</button></p>
+            </div>
+            <button id="close-register-modal" class="absolute top-4 right-4 text-zinc-400 hover:text-zinc-800 text-2xl">&times;</button>
+        </div>
+    </div>
+    
+    <!-- Painel da Sacola (Carrinho) -->
+    <div id="cart-container" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div class="cart-panel absolute top-0 right-0 h-full w-full max-w-md bg-white shadow-2xl flex flex-col border-l border-zinc-200">
+            <div class="flex justify-between items-center p-6 border-b border-zinc-200">
+                <h2 class="text-2xl font-bold text-zinc-900">Sua Sacola</h2>
+                <button id="close-cart-button" class="text-zinc-400 hover:text-zinc-800 text-2xl">&times;</button>
+            </div>
+            <div id="cart-items" class="flex-grow p-6 overflow-y-auto"></div>
+            <div class="p-6 border-t border-zinc-200">
+                <div class="flex justify-between items-center mb-4 text-lg">
+                    <span class="font-semibold text-zinc-900">Total:</span>
+                    <span id="cart-total" class="font-bold text-pink-500">R$ 0,00</span>
+                </div>
+                <button id="checkout-button" class="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-3 px-4 rounded-lg transition-colors">Finalizar Compra</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal de Checkout -->
+    <div id="checkout-modal" class="fixed inset-0 bg-black bg-opacity-70 z-50 hidden items-center justify-center p-4 modal-backdrop">
+        <div class="modal-content-wrapper bg-white rounded-lg shadow-2xl w-full max-w-lg modal-content border border-zinc-200 relative">
+            <div class="p-8">
+                <h2 class="text-2xl font-bold text-zinc-900 mb-6 text-center">Finalizar Compra</h2>
+                <div id="checkout-summary" class="mb-6 p-4 bg-zinc-50 rounded-lg"></div>
+                <form id="checkout-form">
+                    <h3 class="text-xl font-semibold text-zinc-900 mb-4">Endereço de Entrega</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <input type="text" placeholder="Nome Completo" class="bg-zinc-100 border border-zinc-300 rounded-lg px-4 py-2 text-zinc-900 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500" required>
+                        <input type="text" placeholder="CEP" class="bg-zinc-100 border border-zinc-300 rounded-lg px-4 py-2 text-zinc-900 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500" required>
+                        <input type="text" placeholder="Endereço" class="md:col-span-2 bg-zinc-100 border border-zinc-300 rounded-lg px-4 py-2 text-zinc-900 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500" required>
+                        <input type="text" placeholder="Número" class="bg-zinc-100 border border-zinc-300 rounded-lg px-4 py-2 text-zinc-900 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500" required>
+                        <input type="text" placeholder="Complemento (Opcional)" class="bg-zinc-100 border border-zinc-300 rounded-lg px-4 py-2 text-zinc-900 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500">
+                    </div>
+                    <h3 class="text-xl font-semibold text-zinc-900 mb-4">Pagamento</h3>
+                    <div class="grid grid-cols-1 gap-4 mb-6">
+                        <input type="text" placeholder="Número do Cartão" class="bg-zinc-100 border border-zinc-300 rounded-lg px-4 py-2 text-zinc-900 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500" required>
+                        <input type="text" placeholder="Nome no Cartão" class="bg-zinc-100 border border-zinc-300 rounded-lg px-4 py-2 text-zinc-900 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500" required>
+                        <div class="flex gap-4">
+                            <input type="text" placeholder="Validade (MM/AA)" class="w-1/2 bg-zinc-100 border border-zinc-300 rounded-lg px-4 py-2 text-zinc-900 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500" required>
+                            <input type="text" placeholder="CVC" class="w-1/2 bg-zinc-100 border border-zinc-300 rounded-lg px-4 py-2 text-zinc-900 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full btn-primary text-white font-bold py-3 px-4 rounded-lg">Confirmar Pedido</button>
+                </form>
+            </div>
+            <button id="close-checkout-modal" class="absolute top-4 right-4 text-zinc-400 hover:text-zinc-800 text-2xl">&times;</button>
+        </div>
+    </div>
+
+    <!-- NOVO: Modal de Detalhes do Produto -->
+    <div id="product-details-modal" class="fixed inset-0 bg-black bg-opacity-70 z-50 hidden items-center justify-center p-4 modal-backdrop">
+        <div class="modal-content-wrapper bg-white rounded-lg shadow-2xl w-full max-w-4xl modal-content border border-zinc-200 relative">
+            <div id="product-details-content" class="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Conteúdo será preenchido pelo JavaScript -->
+            </div>
+            <button onclick="closeProductDetails()" class="absolute top-4 right-4 text-zinc-400 hover:text-zinc-800 text-3xl">&times;</button>
+        </div>
+    </div>
+
+    <!-- Notificação Toast -->
+    <div id="toast-notification" class="fixed bottom-5 right-5 bg-pink-500 text-white py-3 px-6 rounded-lg shadow-lg transform translate-x-[120%] transition-transform duration-500 ease-in-out z-50">
+        <p>Produto adicionado à sacola!</p>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        // MUDANÇA: Dados dos produtos atualizados com 'description' e 'reviews'
+        const allProducts = [
+            // Rosto
+            { 
+                id: 1, 
+                title: 'Base Matte HD', 
+                brand: 'Marca Glam', 
+                category: 'Rosto', 
+                price: 89.90, 
+                img: 'https://uploads.onecompiler.io/4384tr7ru/43z949u5z/download.jpeg',
+                description: 'Uma base de alta cobertura com acabamento matte aveludado. Dura o dia todo, resiste à água e controla a oleosidade sem pesar. Perfeita para fotos e eventos especiais. Fórmula vegana e não testada em animais.',
+                reviews: [
+                    { user: 'Ana P.', rating: 5, comment: 'Maravilhosa! Cobre tudo e dura a noite inteira.' },
+                    { user: 'Beatriz L.', rating: 4, comment: 'Muito boa, mas tem que espalhar rápido pois seca logo.' }
+                ]
+            },
+            { 
+                id: 2, 
+                title: 'Corretivo Líquido', 
+                brand: 'Shine', 
+                category: 'Rosto', 
+                price: 49.90, 
+                img: 'https://uploads.onecompiler.io/4384tr7ru/442hx6hbv/download%20(5).jpeg',
+                description: 'Corretivo líquido de alta cobertura e longa duração. Disfarça olheiras, manchas e imperfeições com acabamento natural. Não acumula nas linhas finas.',
+                reviews: [
+                    { user: 'Carla S.', rating: 5, comment: 'Perfeito, não vivo sem! Cobre minha olheira muito bem.' }
+                ]
+            },
+            { 
+                id: 3, 
+                title: 'Pó Compacto Translúcido', 
+                brand: 'Marca Glam', 
+                category: 'Rosto', 
+                price: 65.00, 
+                img: 'https://uploads.onecompiler.io/4384tr7ru/442hx6hbv/images%20(2).jpeg',
+                description: 'Pó translúcido ultrafino para selar a maquiagem e controlar o brilho. Proporciona um acabamento matte sem estourar no flash. Ideal para todos os tons de pele.',
+                reviews: [
+                    { user: 'Daniela F.', rating: 5, comment: 'Deixa a pele um veludo, amei!' },
+                    { user: 'Fernanda M.', rating: 4, comment: 'Bom, mas esfarela um pouco.' }
+                ]
+            },
+            { 
+                id: 4, 
+                title: 'Blush Compacto Rosado', 
+                brand: 'Beleza Rara', 
+                category: 'Rosto', 
+                price: 55.00, 
+                img: 'https://uploads.onecompiler.io/4384tr7ru/442hx6hbv/images%20(4).jpeg',
+                description: 'Blush em pó com textura macia e alta pigmentação. Cor rosada com leves partículas de brilho para um ar de saúde instantâneo.',
+                reviews: [
+                    { user: 'Gabriela T.', rating: 5, comment: 'A cor é simplesmente perfeita! Muito natural.' }
+                ]
+            },
+            // Olhos
+            { 
+                id: 5, 
+                title: 'Paleta de Sombras Nude', 
+                brand: 'Beleza Rara', 
+                category: 'Olhos', 
+                price: 129.90, 
+                img: 'https://placehold.co/400x400/ec4899/ffffff?text=Paleta+Nude',
+                description: 'Paleta com 12 tons de sombras neutras, incluindo mattes aveludados e cintilantes luminosos. Perfeita para looks do dia a dia ou para uma produção mais elaborada. Alta pigmentação e fácil de esfumar.',
+                reviews: [
+                    { user: 'Heloísa V.', rating: 5, comment: 'A paleta da minha vida. Uso todos os dias.' },
+                    { user: 'Isabela N.', rating: 5, comment: 'Cores lindas e muito pigmentadas. Vale o preço.' },
+                    { user: 'Juliana R.', rating: 4, comment: 'As cores matte são ótimas, mas as cintilantes poderiam ser mais macias.' }
+                ]
+            },
+            // Lábios
+            { 
+                id: 9, 
+                title: 'Batom Líquido Matte Vermelho', 
+                brand: 'Marca Glam', 
+                category: 'Lábios', 
+                price: 45.00, 
+                img: 'https://uploads.onecompiler.io/4384tr7ru/442hx6hbv/download%20(3).jpeg',
+                description: 'O vermelho perfeito existe! Batom líquido com acabamento 100% matte, super confortável nos lábios. Não transfere e dura por horas.',
+                reviews: [
+                    { user: 'Larissa G.', rating: 5, comment: 'Que vermelho poderoso! Amei a duração.' }
+                ]
+            },
+            // Outros produtos (sem descrição e reviews para simplificar)
+            { id: 21, title: 'Iluminador em Pó Solto', brand: 'Shine', category: 'Rosto', price: 72.00, img: 'https://uploads.onecompiler.io/4384tr7ru/442hx6hbv/images%20(3).jpeg', description: 'Descrição não disponível.', reviews: [] },
+            { id: 22, title: 'Primer Facial Efeito Blur', brand: 'Marca Glam', category: 'Rosto', price: 79.90, img: 'https://uploads.onecompiler.io/4384tr7ru/442hx6hbv/download%20(7).jpeg', description: 'Descrição não disponível.', reviews: [] },
+            { id: 6, title: 'Máscara de Cílios Volume', brand: 'Shine', category: 'Olhos', price: 69.90, img: 'https://placehold.co/400x400/f472b6/ffffff?text=Máscara+Volume', description: 'Descrição não disponível.', reviews: [] },
+            { id: 7, title: 'Delineador Líquido Preto', brand: 'Marca Glam', category: 'Olhos', price: 52.00, img: 'https://placehold.co/400x400/f9a8d4/18181b?text=Delineador', description: 'Descrição não disponível.', reviews: [] },
+            { id: 8, title: 'Lápis de Olho Marrom', brand: 'Beleza Rara', category: 'Olhos', price: 39.99, img: 'https://placehold.co/400x400/ec4899/ffffff?text=Lápis+Marrom', description: 'Descrição não disponível.', reviews: [] },
+            { id: 25, title: 'Paleta Multifuncional', brand: 'Eudora', category: 'Olhos', price: 139.90, img: 'https://uploads.onecompiler.io/4384tr7ru/442hx6hbv/download%20(11).jpeg', description: 'Descrição não disponível.', reviews: [] },
+            { id: 26, title: 'Sombra Líquida Glitter', brand: 'Marca Glam', category: 'Olhos', price: 58.00, img: 'https://uploads.onecompiler.io/4384tr7ru/442hx6hbv/download%20(10).jpeg', description: 'Descrição não disponível.', reviews: [] },
+            { id: 10, title: 'Gloss Labial Nude Rosado', brand: 'Sephora', category: 'Lábios', price: 42.00, img: 'https://uploads.onecompiler.io/4384tr7ru/442hx6hbv/download%20(2).jpeg', description: 'Descrição não disponível.', reviews: [] },
+            { id: 29, title: 'Batom em Bala Hidratante', brand: 'Beleza Rara', category: 'Lábios', price: 38.90, img: 'https://uploads.onecompiler.io/4384tr7ru/442hx6hbv/download%20(9).jpeg', description: 'Descrição não disponível.', reviews: [] },
+            { id: 30, title: 'Lápis de Boca Contorno', brand: 'Marca Glam', category: 'Lábios', price: 29.90, img: 'https://uploads.onecompiler.io/4384tr7ru/442hx6hbv/download%20(8).jpeg', description: 'Descrição não disponível.', reviews: [] },
+            { id: 11, title: 'Sérum Vitamina C', brand: 'SkinFirst', category: 'Skincare', price: 119.90, img: 'https://placehold.co/400x400/f472b6/ffffff?text=Sérum+Vitamina+C', description: 'Descrição não disponível.', reviews: [] },
+            { id: 12, title: 'Hidratante Facial Gel', brand: 'SkinFirst', category: 'Skincare', price: 89.00, img: 'https://placehold.co/400x400/f9a8d4/18181b?text=Hidratante+Gel', description: 'Descrição não disponível.', reviews: [] },
+            { id: 35, title: 'Água Micelar Demaquilante', brand: 'Beleza Rara', category: 'Skincare', price: 55.00, img: 'https://placehold.co/400x400/ec4899/ffffff?text=Água+Micelar', description: 'Descrição não disponível.', reviews: [] },
+            { id: 36, title: 'Protetor Solar FPS 60', brand: 'SkinFirst', category: 'Skincare', price: 75.00, img: 'https://placehold.co/400x400/f472b6/ffffff?text=Protetor+Solar', description: 'Descrição não disponível.', reviews: [] },
+            { id: 15, title: 'Kit de Pincéis Profissional', brand: 'Shine', category: 'Acessórios', price: 159.90, img: 'https://placehold.co/400x400/f9a8d4/18181b?text=Kit+Pincéis', description: 'Descrição não disponível.', reviews: [] },
+            { id: 16, title: 'Esponja de Maquiagem', brand: 'Marca Glam', category: 'Acessórios', price: 29.90, img: 'https://placehold.co/400x400/ec4899/ffffff?text=Esponja', description: 'Descrição não disponível.', reviews: [] },
+            { id: 41, title: 'Limpador de Pincéis', brand: 'Beleza Rara', category: 'Acessórios', price: 45.00, img: 'https://placehold.co/400x400/f472b6/ffffff?text=Limpador+Pincéis', description: 'Descrição não disponível.', reviews: [] },
+            { id: 42, title: 'Espelho de Aumento LED', brand: 'Shine', category: 'Acessórios', price: 110.00, img: 'https://placehold.co/400x400/f9a8d4/18181b?text=Espelho+LED', description: 'Descrição não disponível.', reviews: [] },
+        ];
+
+        let cart = [];
+
+        const contentContainer = document.getElementById('content-container');
+        const searchInput = document.getElementById('search-input');
+        const authContainer = document.getElementById('auth-container');
+        
+        const loginModal = document.getElementById('login-modal');
+        const registerModal = document.getElementById('register-modal');
+        const checkoutModal = document.getElementById('checkout-modal');
+        
+        const cartContainer = document.getElementById('cart-container');
+        const cartButton = document.getElementById('cart-button');
+        const closeCartButton = document.getElementById('close-cart-button');
+        const cartBadge = document.getElementById('cart-badge');
+        const cartItemsContainer = document.getElementById('cart-items');
+        const cartTotalEl = document.getElementById('cart-total');
+        const checkoutButton = document.getElementById('checkout-button');
+        const checkoutSummary = document.getElementById('checkout-summary');
+
+        const toast = document.getElementById('toast-notification');
+
+        // NOVO: Referência ao modal de detalhes do produto
+        const productDetailsModal = document.getElementById('product-details-modal');
+        const productDetailsContent = document.getElementById('product-details-content');
+
+
+        function createProductCard(product) {
+            // MUDANÇA: Adicionado onclick="showProductDetails()" no card
+            // MUDANÇA: Adicionado onclick="handleAddToCartClick(event, ...)" no botão da sacola
+            return `
+                <div class="product-card bg-card-color group animate-fadeInUp" onclick="showProductDetails(${product.id})">
+                    <img 
+                        src="${product.img}" 
+                        alt="${product.title}" 
+                        class="w-full h-full object-cover transition-transform duration-400 group-hover:scale-110"
+                        onerror="this.src='https://placehold.co/400x400/18181b/f4f4f5?text=Imagem+Indispon%C3%ADvel'; this.onerror=null;"
+                    >
+                    <div class="product-card-overlay"></div>
+                    <div class="product-card-content transition-transform duration-350 ease-out transform translate-y-full group-hover:translate-y-0">
+                        <h3 class="text-lg font-bold text-white truncate">${product.title}</h3>
+                        <p class="text-sm text-zinc-300">${product.brand}</p>
+                        <div class="flex justify-between items-center mt-3">
+                            <span class="text-lg font-semibold text-pink-400">R$ ${product.price.toFixed(2).replace('.', ',')}</span>
+                            <button onclick="handleAddToCartClick(event, ${product.id})" class="p-2 rounded-full bg-pink-500 hover:bg-pink-600 text-white transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path><path d="M3 6h18"></path><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderProducts(products, container) {
+            container.innerHTML = products.map(createProductCard).join('');
+        }
+
+        function getCategoriesFromProducts(products) {
+            const categories = products.map(product => product.category);
+            return [...new Set(categories)]; // Retorna categorias únicas
+        }
+
+        function renderCategories(products) {
+            const categories = getCategoriesFromProducts(products);
+            const categoriesHTML = categories.map(category => {
+                const categoryProducts = products.filter(product => product.category === category).slice(0, 8); // Limita a 8 por seção
+                
+                return `
+                    <section class="mb-12">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-3xl font-display tracking-wider text-strong-color">${category}</h2>
+                            <a href="#" class="text-sm text-pink-400 hover:text-pink-300 transition-colors font-semibold">Ver Todos</a>
+                        </div>
+                        <div class="relative">
+                            <div class="category-section-scroll">
+                                ${categoryProducts.map(createProductCard).join('')}
+                            </div>
+                            <button class_name="carousel-btn absolute top-1/2 left-0 -translate-y-1/2 -translate-x-4 p-2 rounded-full transition-all z-10">&lt;</button>
+                            <button class_name="carousel-btn absolute top-1/2 right-0 -translate-y-1/2 translate-x-4 p-2 rounded-full transition-all z-10">&gt;</button>
+                        </div>
+                    </section>
+                `;
+            }).join('');
+            
+            contentContainer.innerHTML = categoriesHTML;
+        }
+
+        function renderContent(productsToRender) {
+            if (productsToRender.length === 0) {
+                contentContainer.innerHTML = `<p class="text-center text-xl">Nenhum produto encontrado.</p>`;
+                return;
+            }
+            
+            if (productsToRender.length < allProducts.length) {
+                contentContainer.innerHTML = `
+                    <h2 class="text-3xl font-display tracking-wider text-strong-color mb-6">Resultados da Busca</h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                        ${productsToRender.map(createProductCard).join('')}
+                    </div>
+                `;
+            } else {
+                renderCategories(productsToRender);
+            }
+        }
+
+        // --- Lógica de Busca ---
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            if (searchTerm.length > 1) {
+                const filteredProducts = allProducts.filter(product =>
+                    product.title.toLowerCase().includes(searchTerm) ||
+                    product.brand.toLowerCase().includes(searchTerm)
+                );
+                renderContent(filteredProducts);
+            } else {
+                renderContent(allProducts); // Reseta se a busca estiver vazia
+            }
+        });
+
+        // --- Lógica de Autenticação (Mock) ---
+        function renderAuth() {
+            authContainer.innerHTML = `
+                <button id="login-button" class="text-zinc-700 font-semibold px-4 py-2 rounded-full hover:bg-zinc-200/60 transition-colors">
+                    Entrar
+                </button>
+            `;
+            document.getElementById('login-button').addEventListener('click', openLoginModal);
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            authContainer.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <span class="text-zinc-900 font-semibold hidden sm:block">Olá, Glam!</span>
+                    <button id="logout-button" class="text-zinc-500 hover:text-zinc-900 transition-colors">Sair</button>
+                </div>
+            `;
+            document.getElementById('logout-button').addEventListener('click', renderAuth);
+            closeLoginModal();
+            showToast('Login realizado com sucesso!');
+        }
+
+        function handleRegister(e) {
+            e.preventDefault();
+            handleLogin(e);
+            closeRegisterModal();
+            showToast('Conta criada com sucesso!');
+        }
+
+        // --- Lógica de Modals (Login/Cadastro/Checkout) ---
+        function openLoginModal() { loginModal.classList.remove('hidden'); loginModal.classList.add('flex'); setTimeout(() => loginModal.classList.add('modal-open'), 10); }
+        function closeLoginModal() { 
+            loginModal.classList.remove('modal-open');
+            setTimeout(() => {
+                loginModal.classList.add('hidden');
+                loginModal.classList.remove('flex');
+            }, 300);
+        }
+
+        function openRegisterModal() { registerModal.classList.remove('hidden'); registerModal.classList.add('flex'); setTimeout(() => registerModal.classList.add('modal-open'), 10); }
+        function closeRegisterModal() { 
+            registerModal.classList.remove('modal-open');
+            setTimeout(() => {
+                registerModal.classList.add('hidden');
+                registerModal.classList.remove('flex');
+            }, 300);
+        }
+        
+        function openCheckoutModal() { checkoutModal.classList.remove('hidden'); checkoutModal.classList.add('flex'); setTimeout(() => checkoutModal.classList.add('modal-open'), 10); updateCheckoutSummary(); }
+        function closeCheckoutModal() { 
+            checkoutModal.classList.remove('modal-open');
+            setTimeout(() => {
+                checkoutModal.classList.add('hidden');
+                checkoutModal.classList.remove('flex');
+            }, 300);
+        }
+
+        // --- Lógica da Sacola (Carrinho) ---
+        function openCart() { cartContainer.classList.remove('hidden'); cartContainer.classList.add('cart-open'); }
+        function closeCart() { cartContainer.classList.remove('cart-open'); setTimeout(() => cartContainer.classList.add('hidden'), 300); }
+
+        // MUDANÇA: Função `addToCart` não é mais global
+        function addToCart(productId) { 
+            const productToAdd = allProducts.find(p => p.id === productId);
+            if (!productToAdd) return;
+
+            const existingItem = cart.find(item => item.id === productId);
+            if (existingItem) {
+                existingItem.quantity++;
+            } else {
+                cart.push({ id: productId, quantity: 1, price: productToAdd.price });
+            }
+            
+            updateCart();
+            showToast('Produto adicionado à sacola!');
+        }
+
+        // NOVO: Handler para o clique no botão de sacola do card (evita abrir detalhes)
+        window.handleAddToCartClick = (event, productId) => {
+            event.stopPropagation(); // Impede que o clique "borbulhe" para o card pai
+            addToCart(productId);
+            openCart(); // Abre o carrinho ao adicionar pelo card
+        }
+
+        window.removeFromCart = (productId) => { // Expondo globalmente
+            cart = cart.filter(item => item.id !== productId);
+            updateCart();
+        }
+
+        window.updateCartQuantity = (productId, newQuantity) => { // Expondo globalmente
+            if (newQuantity <= 0) {
+                removeFromCart(productId);
+                return;
+            }
+            const item = cart.find(item => item.id === productId);
+            if (item) {
+                item.quantity = newQuantity;
+            }
+            updateCart();
+        }
+
+        function updateCart() {
+            renderCartItems();
+            updateCartTotal();
+            updateCartBadge();
+        }
+
+        function renderCartItems() {
+            if (cart.length === 0) {
+                cartItemsContainer.innerHTML = '<p class="text-center">Sua sacola está vazia.</p>';
+                return;
+            }
+
+            cartItemsContainer.innerHTML = cart.map(cartItem => {
+                const product = allProducts.find(p => p.id === cartItem.id);
+                return `
+                    <div class="flex items-center gap-4 mb-4">
+                        <img src="${product.img}" alt="${product.title}" class="w-20 h-20 rounded-lg object-cover border border-zinc-100" onerror="this.src='https://placehold.co/400x400/18181b/f4f4f5?text=Img'; this.onerror=null;">
+                        <div class="flex-grow">
+                            <h4 class="font-semibold text-zinc-900">${product.title}</h4>
+                            <p class="text-sm text-zinc-500">${product.brand}</p>
+                            <span class="text-pink-500 font-semibold">R$ ${product.price.toFixed(2).replace('.', ',')}</span>
+                        </div>
+                        <div class="flex flex-col items-end gap-2">
+                            <div class="flex items-center border border-zinc-300 rounded-full">
+                                <button onclick="updateCartQuantity(${product.id}, ${cartItem.quantity - 1})" class="px-2 py-1 text-zinc-700">-</button>
+                                <span class="px-2 text-zinc-900 text-sm">${cartItem.quantity}</span>
+                                <button onclick="updateCartQuantity(${product.id}, ${cartItem.quantity + 1})" class="px-2 py-1 text-zinc-700">+</button>
+                            </div>
+                            <button onclick="removeFromCart(${product.id})" class="text-xs text-zinc-500 hover:text-red-500 transition-colors">Remover</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateCartTotal() {
+            const total = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+            cartTotalEl.textContent = `R$ ${total.toFixed(2).replace('.', ',')}`;
+        }
+
+        function updateCartBadge() {
+            const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
+            if (totalItems > 0) {
+                cartBadge.textContent = totalItems;
+                cartBadge.classList.remove('hidden');
+            } else {
+                cartBadge.classList.add('hidden');
+            }
+        }
+        
+        function updateCheckoutSummary() {
+            if (cart.length === 0) {
+                checkoutSummary.innerHTML = '<p>Nenhum item na sacola.</p>';
+                return;
+            }
+            const total = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+            checkoutSummary.innerHTML = cart.map(cartItem => {
+                 const product = allProducts.find(p => p.id === cartItem.id);
+                 return `<p class="text-zinc-600 text-sm">${cartItem.quantity}x ${product.title}</p>`;
+            }).join('') + `<p class="text-zinc-900 font-bold text-lg mt-2">Total: R$ ${total.toFixed(2).replace('.', ',')}</p>`;
+        }
+
+        // --- Lógica de Checkout ---
+        function handleCheckout(e) {
+            e.preventDefault();
+            if (cart.length === 0) {
+                showToast('Sua sacola está vazia!', 'error');
+                return;
+            }
+            
+            showToast('Compra finalizada com sucesso!');
+            cart = [];
+            updateCart();
+            closeCheckoutModal();
+            closeCart();
+        }
+
+        // --- Notificação Toast ---
+        function showToast(message, type = 'success') {
+            toast.textContent = message;
+            if (type === 'error') {
+                toast.classList.replace('bg-pink-500', 'bg-red-500');
+            } else {
+                toast.classList.replace('bg-red-500', 'bg-pink-500');
+            }
+            
+            toast.classList.remove('translate-x-[120%]');
+            toast.classList.add('translate-x-0');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-x-0');
+                toast.classList.add('translate-x-[120%]');
+            }, 3000);
+        }
+
+        // --- NOVO: Lógica do Modal de Detalhes do Produto ---
+
+        // Função para gerar estrelas de avaliação
+        function renderStars(rating) {
+            let stars = '';
+            for (let i = 1; i <= 5; i++) {
+                if (i <= rating) {
+                    stars += '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>';
+                } else {
+                    stars += '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.524 4.674a1 1 0 00.95.69h4.905c.969 0 1.371 1.24.588 1.81l-3.968 2.88a1 1 0 00-.364 1.118l1.524 4.674c.3.921-.755 1.688-1.54 1.118l-3.968-2.88a1 1 0 00-1.175 0l-3.968 2.88c-.784.57-1.838-.197-1.539-1.118l1.524-4.674a1 1 0 00-.364-1.118L2.04 10.1c-.783-.57-.38-1.81.588-1.81h4.905a1 1 0 00.95-.69L11.049 2.927z"></path></svg>';
+                }
+            }
+            return `<div class="flex star-rating">${stars}</div>`;
+        }
+
+        window.showProductDetails = (productId) => {
+            const product = allProducts.find(p => p.id === productId);
+            if (!product) return;
+
+            // NOVO: Encontrar produtos relacionados (da mesma categoria, exceto o atual)
+            const relatedProducts = allProducts.filter(
+                p => p.category === product.category && p.id !== product.id
+            ).slice(0, 2); // Pega 2 produtos relacionados
+
+            // Gerar HTML para as avaliações
+            let reviewsHTML = '<p class="text-sm">Ainda não há avaliações para este produto.</p>';
+            if (product.reviews && product.reviews.length > 0) {
+                reviewsHTML = product.reviews.map(review => `
+                    <div class="border-t border-zinc-200 pt-4 mt-4">
+                        <div class="flex items-center justify-between">
+                            <span class="font-semibold text-zinc-800">${review.user}</span>
+                            ${renderStars(review.rating)}
+                        </div>
+                        <p class="text-zinc-600 mt-2">${review.comment}</p>
+                    </div>
+                `).join('');
+            }
+
+            // NOVO: Gerar HTML para produtos relacionados
+            let relatedHTML = '';
+            if (relatedProducts.length > 0) {
+                relatedHTML = `
+                    <h3 class="text-xl font-semibold text-zinc-900 mt-8 mb-4">Você também pode gostar</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        ${relatedProducts.map(related => `
+                            <div class="related-product-card" onclick="closeProductDetails(); showProductDetails(${related.id})">
+                                <img src="${related.img}" alt="${related.title}" onerror="this.src='https://placehold.co/200x200/18181b/f4f4f5?text=Img'; this.onerror=null;">
+                                <div class="p-3">
+                                    <h4 class="text-sm font-semibold text-zinc-800 truncate">${related.title}</h4>
+                                    <p class="text-xs text-zinc-500">${related.brand}</p>
+                                    <span class="text-sm font-bold text-pink-500 mt-1 block">R$ ${related.price.toFixed(2).replace('.', ',')}</span>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            // Popular o conteúdo do modal
+            productDetailsContent.innerHTML = `
+                <!-- Coluna da Imagem -->
+                <div>
+                    <img 
+                        src="${product.img}" 
+                        alt="${product.title}" 
+                        class="w-full h-auto aspect-square object-cover rounded-lg shadow-md border border-zinc-200"
+                        onerror="this.src='https://placehold.co/400x400/18181b/f4f4f5?text=Imagem+Indispon%C3%ADvel'; this.onerror=null;"
+                    >
+                </div>
+                <!-- Coluna de Informações -->
+                <div class="flex flex-col">
+                    <h2 class="text-3xl font-bold text-zinc-900">${product.title}</h2>
+                    <p class="text-lg text-zinc-500 mb-2">${product.brand}</p>
+                    <span class="text-3xl font-bold text-pink-500 mb-4">R$ ${product.price.toFixed(2).replace('.', ',')}</span>
+                    
+                    <p class="text-base text-zinc-700 mb-6">${product.description}</p>
+                    
+                    <button onclick="addToCart(${product.id}); closeProductDetails(); openCart();" class="w-full btn-primary text-white font-bold py-3 px-4 rounded-lg mb-8">
+                        Adicionar à Sacola
+                    </button>
+                    
+                    <!-- Seção de Avaliações -->
+                    <div class="flex-grow">
+                        <h3 class="text-xl font-semibold text-zinc-900 mb-4">Avaliações de Clientes</h3>
+                        <div class="max-h-48 overflow-y-auto pr-2">
+                           ${reviewsHTML}
+                        </div>
+                    </div>
+
+                    <!-- NOVO: Seção de Produtos Relacionados -->
+                    ${relatedHTML}
+                </div>
+            `;
+
+            // Abrir o modal
+            productDetailsModal.classList.remove('hidden');
+            productDetailsModal.classList.add('flex');
+            setTimeout(() => productDetailsModal.classList.add('modal-open'), 10);
+        }
+
+        window.closeProductDetails = () => {
+            productDetailsModal.classList.remove('modal-open');
+            setTimeout(() => {
+                productDetailsModal.classList.add('hidden');
+                productDetailsModal.classList.remove('flex');
+                productDetailsContent.innerHTML = ''; // Limpa o conteúdo
+            }, 300);
+        }
+
+
+        // --- Event Listeners Iniciais ---
+        document.getElementById('login-form').addEventListener('submit', handleLogin);
+        document.getElementById('register-form').addEventListener('submit', handleRegister);
+        document.getElementById('checkout-form').addEventListener('submit', handleCheckout);
+        
+        document.getElementById('close-login-modal').addEventListener('click', closeLoginModal);
+        document.getElementById('close-register-modal').addEventListener('click', closeRegisterModal);
+        document.getElementById('close-checkout-modal').addEventListener('click', closeCheckoutModal);
+
+        document.getElementById('show-register').addEventListener('click', () => { closeLoginModal(); openRegisterModal(); });
+        document.getElementById('show-login').addEventListener('click', () => { closeRegisterModal(); openLoginModal(); });
+        
+        cartButton.addEventListener('click', openCart);
+        closeCartButton.addEventListener('click', closeCart);
+        checkoutButton.addEventListener('click', () => {
+            const isLoggedIn = authContainer.querySelector('#logout-button');
+            if (!isLoggedIn) {
+                closeCart();
+                openLoginModal();
+                showToast('Você precisa fazer login para finalizar a compra.', 'error');
+            } else {
+                openCheckoutModal();
+            }
+        });
+
+        // --- Inicialização ---
+        renderAuth();
+        renderContent(allProducts); // Renderiza o conteúdo inicial
+        updateCart(); // Garante que o carrinho (vazio) está no estado correto
+
+    });
+    </script>
+</body>
+</html>
+
+
+
+
+
+
